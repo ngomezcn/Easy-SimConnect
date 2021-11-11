@@ -9,6 +9,7 @@ HANDLE hSimConnect = NULL; // SimConnect Handle
 // To make a data request we need:
 static enum DATA_DEFINE_ID {
 	DEFINITION_1,
+	DEFINITION_THROTTLE,
 };
 
 static enum DATA_REQUEST_ID {
@@ -25,6 +26,16 @@ struct SimResponse {
 	int32_t vertical_speed;
 };
 
+
+struct structThrottleControl
+{
+	double throttlePercent;
+};
+
+structThrottleControl tc;
+
+
+/*
 // Event callback
 void CALLBACK MyDispatchProc1(SIMCONNECT_RECV* pData, DWORD cbData, void* pContext) {
 	switch (pData->dwID)
@@ -54,7 +65,7 @@ void CALLBACK MyDispatchProc1(SIMCONNECT_RECV* pData, DWORD cbData, void* pConte
 				<< "- Heading: " << pS->heading
 				<< "- Speed (knots): " << pS->speed
 				<< "- Vertical Speed: " << pS->vertical_speed << "  "
-				<< std::flush;*/
+				<< std::flush;
 
 			break;
 		}
@@ -71,10 +82,11 @@ void CALLBACK MyDispatchProc1(SIMCONNECT_RECV* pData, DWORD cbData, void* pConte
 	default:
 		break;
 	}
-}
+}*/
 
 void myDispatch(SIMCONNECT_RECV* pData, DWORD cbData)
 {
+
 	switch (pData->dwID)
 	{
 	case SIMCONNECT_RECV_ID_SIMOBJECT_DATA:
@@ -116,36 +128,37 @@ bool initSimEvents() {
 
 		// #IMPORTANT: the request order must follow the declaration order o the response struct!
 		// SimConnect_AddToDataDefinition takes: HANDLem enum DEFINITION_ID, const char* DATA_NAME, const char* UNIT, DATATYPE (default is FLOAT64)
+		
+		// Data input
 		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "Indicated Altitude", "feet");
 		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "HEADING INDICATOR", "degrees", SIMCONNECT_DATATYPE_INT32);
 		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "Airspeed Indicated", "knots", SIMCONNECT_DATATYPE_INT32);
 		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "VERTICAL SPEED", "Feet per second", SIMCONNECT_DATATYPE_INT32);
+		
+		// Data output
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_THROTTLE, "YOKE X POSITION", "percent");
+
+		// System status
 		hr = SimConnect_RequestSystemState(hSimConnect, REQUEST_1, "AircraftLoaded");
+
+		std::cout << hr << std::endl;
 
 		// EVERY SECOND REQUEST DATA FOR DEFINITION 1 ON THE CURRENT USER AIRCRAFT (SIMCONNECT_OBJECT_ID_USER)
 		hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_1, DEFINITION_1, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_VISUAL_FRAME);
 
 		// Process incoming SimConnect Server messages while the app is running
 		while (quit == 0) {
-			// Call SimConnect_CallDispatch, MyDispatchProc1 will handle simulation events			
-			//SimConnect_CallDispatch(hSimConnect, MyDispatchProc1, NULL);
 
 			SIMCONNECT_RECV* pData;
 			DWORD cbData;
 			hr = SimConnect_GetNextDispatch(hSimConnect, &pData, &cbData);
-
 			if (SUCCEEDED(hr))
 			{
 				myDispatch(pData, cbData);
 			}
-			else
-			{
-				std::cout << "An error with Dispatch has occurred\n";
-				while (!initSimEvents())
-				{
-
-				}
-			}
+			
+			tc.throttlePercent = -16.000;
+			hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_THROTTLE, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(tc), &tc);
 
 			Sleep(1);
 		}
@@ -160,7 +173,58 @@ bool initSimEvents() {
 	}
 }
 
+
+struct data
+{
+	void set()
+	{
+
+	}
+
+	void get()
+	{
+
+	}
+};
+
+struct Aircraft
+{
+	data vertical_speed;
+	data engines;
+};
+
+struct atc
+{
+
+};
+
+struct time
+{
+
+};
+
+struct world
+{
+
+};
+
+struct Sim 
+{
+
+	Aircraft* aircraft;
+
+	struct caca
+	{
+		int a;
+	};
+};
+
+
 int main() {
+
+	Sim sim;
+
+	sim.aircraft->engines.set();
 
 	// If could not connect to MFS2020 retry
 	//while (!initSimEvents())
