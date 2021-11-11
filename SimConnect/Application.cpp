@@ -30,6 +30,13 @@ void CALLBACK MyDispatchProc1(SIMCONNECT_RECV* pData, DWORD cbData, void* pConte
 	switch (pData->dwID)
 	{
 		// CASE SIMULATION DATA RECIVE EVENT
+
+	case SIMCONNECT_RECV_ID_SYSTEM_STATE:
+	{
+		SIMCONNECT_RECV_SYSTEM_STATE* pSysData = (SIMCONNECT_RECV_SYSTEM_STATE*)pData;
+		std::cout << pSysData->szString << std::endl;
+
+	}
 	case SIMCONNECT_RECV_ID_SIMOBJECT_DATA:
 	{
 		// Retrieve simulation data and cast it to SIMCONNECT_RECV_SIMOBJECT_DATA pointer
@@ -41,14 +48,13 @@ void CALLBACK MyDispatchProc1(SIMCONNECT_RECV* pData, DWORD cbData, void* pConte
 		case REQUEST_1:
 			SimResponse* pS = (SimResponse*)&pObjData->dwData;
 
-
 			// print data
-			std::cout
+			/*std::cout
 				<< "\rAltitude: " << pS->altitude
 				<< "- Heading: " << pS->heading
 				<< "- Speed (knots): " << pS->speed
-				<< "- Vertical Speed: " << pS->vertical_speed
-				<< std::flush;
+				<< "- Vertical Speed: " << pS->vertical_speed << "  "
+				<< std::flush;*/
 
 			break;
 		}
@@ -62,6 +68,39 @@ void CALLBACK MyDispatchProc1(SIMCONNECT_RECV* pData, DWORD cbData, void* pConte
 		break;
 	}
 	// Other events
+	default:
+		break;
+	}
+}
+
+void myDispatch(SIMCONNECT_RECV* pData, DWORD cbData)
+{
+	switch (pData->dwID)
+	{
+	case SIMCONNECT_RECV_ID_SIMOBJECT_DATA:
+	{
+		// Retrieve simulation data and cast it to SIMCONNECT_RECV_SIMOBJECT_DATA pointer
+		SIMCONNECT_RECV_SIMOBJECT_DATA* pObjData = (SIMCONNECT_RECV_SIMOBJECT_DATA*)pData;
+
+		// Switch to find the right request 
+		switch (pObjData->dwRequestID)
+		{
+		case REQUEST_1:
+			SimResponse* pS = (SimResponse*)&pObjData->dwData;
+
+			// print data
+			std::cout
+				<< "\rAltitude: " << pS->altitude
+				<< "- Heading: " << pS->heading
+				<< "- Speed (knots): " << pS->speed
+				<< "- Vertical Speed: " << pS->vertical_speed << "  "
+				<< std::flush;
+
+			break;
+		}
+
+		break;
+	}
 	default:
 		break;
 	}
@@ -81,14 +120,33 @@ bool initSimEvents() {
 		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "HEADING INDICATOR", "degrees", SIMCONNECT_DATATYPE_INT32);
 		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "Airspeed Indicated", "knots", SIMCONNECT_DATATYPE_INT32);
 		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "VERTICAL SPEED", "Feet per second", SIMCONNECT_DATATYPE_INT32);
+		hr = SimConnect_RequestSystemState(hSimConnect, REQUEST_1, "AircraftLoaded");
 
 		// EVERY SECOND REQUEST DATA FOR DEFINITION 1 ON THE CURRENT USER AIRCRAFT (SIMCONNECT_OBJECT_ID_USER)
-		hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_1, DEFINITION_1, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_SECOND);
+		hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_1, DEFINITION_1, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_VISUAL_FRAME);
 
 		// Process incoming SimConnect Server messages while the app is running
 		while (quit == 0) {
-			// Call SimConnect_CallDispatch, MyDispatchProc1 will handle simulation events
-			SimConnect_CallDispatch(hSimConnect, MyDispatchProc1, NULL);
+			// Call SimConnect_CallDispatch, MyDispatchProc1 will handle simulation events			
+			//SimConnect_CallDispatch(hSimConnect, MyDispatchProc1, NULL);
+
+			SIMCONNECT_RECV* pData;
+			DWORD cbData;
+			hr = SimConnect_GetNextDispatch(hSimConnect, &pData, &cbData);
+
+			if (SUCCEEDED(hr))
+			{
+				myDispatch(pData, cbData);
+			}
+			else
+			{
+				std::cout << "An error with Dispatch has occurred\n";
+				while (!initSimEvents())
+				{
+
+				}
+			}
+
 			Sleep(1);
 		}
 
