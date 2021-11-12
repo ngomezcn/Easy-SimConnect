@@ -195,7 +195,9 @@ namespace sim
 	Aircraft aircraft;
 }
 
+SimResponse* pS;
 double* prueba;
+double tope = 0;
 void myDispatch(SIMCONNECT_RECV* pData, DWORD cbData)
 {
 
@@ -210,8 +212,8 @@ void myDispatch(SIMCONNECT_RECV* pData, DWORD cbData)
 		switch (pObjData->dwRequestID)
 		{
 		case REQUEST_1:
-			//SimResponse* pS = (SimResponse*)&pObjData->dwData;
-			sim::aircraft.pS = (SimResponse*)&pObjData->dwData;
+			pS = (SimResponse*)&pObjData->dwData;
+			//sim::aircraft.pS = (SimResponse*)&pObjData->dwData;
 
 			// print data
 			/*std::cout
@@ -222,7 +224,10 @@ void myDispatch(SIMCONNECT_RECV* pData, DWORD cbData)
 				<< std::flush;*/
 
 
-			//prueba = &pS->altitude;
+			sim::aircraft.pS->altitude = pS->altitude;
+
+			prueba = &pS->altitude;
+
 
 			break;
 		}
@@ -278,13 +283,13 @@ bool initSimEvents() {
 
 			sim::aircraft.throttle1->set((rand() % 100) + 0.1);
 			sim::aircraft.throttle2->set((rand() % 50)+0.1);
-			std::cout << sim::aircraft.pS->altitude << std::endl;
+			//std::cout << sim::aircraft.pS->altitude << std::endl;
 
-			//sim::aircraft.altitude->get();
-
-			//std::cout << *prueba << std::endl;
 			
-			//std::cout << Sim::aircraft.altitude->get() << std::endl;
+
+		std::cout << *prueba << std::endl;
+			
+			//std::cout << sim::aircraft.pS->altitude << std::endl;
 
 
 			//sim->aircraft->throttle1->set(100);
