@@ -119,6 +119,55 @@ struct Data
 
 
 
+namespace simvar
+{
+
+
+	struct Settable 
+	{
+	private:
+		const char* datumName;		 // Name of the MFS2020 simulation variable. Docs: file:///C:/MSFS%20SDK/Documentation/html/Programming_Tools/SimVars/Simulation_Variables.htm
+		const char* units;			 // Specifies the units of the variable.     Docs: file:///C:/MSFS%20SDK/Documentation/html/Programming_Tools/SimVars/Simulation_Variable_Units.htm
+		DATA_DEFINITION_ID defineID; // Specifies the ID of the client defined data definition.
+	public:
+		Data data;
+		sim::type dType = sim::type::null;
+
+		Settable(
+			HANDLE hSimConnect,
+			DATA_DEFINITION_ID _defineID,
+			const char* _datumName,
+			const char* _units,
+			sim::type _dType)
+			: datumName(_datumName), defineID(_defineID), units(_units), dType(_dType)
+		{
+			SimConnect_AddToDataDefinition(hSimConnect, _defineID, _datumName, units); // Adding simulation variable to the SDK observer
+		}
+
+		int set()
+		{
+			return 0;
+		}
+
+		int get()
+		{
+			return 0;
+		}
+	};
+
+	struct NotSettable
+	{
+
+	};
+
+	void test()
+	{
+
+
+		engine->get();
+	}
+}
+
 class SimVar
 {
 private:
@@ -160,8 +209,6 @@ public:
 		std::cout << *((double*)data.pValue);
 	}
 };
-
-
 
 struct Aircraft
 {
@@ -283,6 +330,9 @@ bool initSimEvents() {
 
 			sim::aircraft.throttle1->set((rand() % 100) + 0.1);
 			sim::aircraft.throttle2->set((rand() % 50)+0.1);
+
+
+
 			//std::cout << sim::aircraft.pS->altitude << std::endl;
 
 			
