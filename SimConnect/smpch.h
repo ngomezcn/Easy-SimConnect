@@ -2,7 +2,6 @@
 #include <Windows.h>
 #include "SimConnect.h"
 #include <iostream>
-//#include "Settable.h"
 
 int quit = 0; // 0 = Keep Running - 1 = Exit app
 HANDLE hSimConnect = NULL; // SimConnect Handle
@@ -10,6 +9,8 @@ HANDLE hSimConnect = NULL; // SimConnect Handle
 // To make a data request we need:
 static enum DATA_DEFINITION_ID {
 	DEFINITION_1,
+	DEFINITION_3,
+
 	DEFINITION_THROTTLE1,
 	DEFINITION_THROTTLE2,
 	ALTITUDE,
@@ -17,6 +18,7 @@ static enum DATA_DEFINITION_ID {
 enum DATA_REQUEST_ID {
 	REQUEST_1,
 	REQUEST_2,
+	REQUEST_3,
 	// ... (we can use different request to organize our response data)
 };
 // This structure will hold the data
@@ -26,6 +28,12 @@ struct SimResponse {
 	int speed;
 	int vertical_speed;
 };
+
+struct test {
+	double throttle1;
+	double throttle2;
+};
+
 /*
 // Event callback
 void CALLBACK MyDispatchProc1(SIMCONNECT_RECV* pData, DWORD cbData, void* pContext) {

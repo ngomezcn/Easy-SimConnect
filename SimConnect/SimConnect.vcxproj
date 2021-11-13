@@ -43,7 +43,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -144,16 +144,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Aircraft.cpp" />
     <ClCompile Include="Application.cpp" />
-    <ClCompile Include="Settable.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AddyLib64.h" />
     <ClInclude Include="Aircraft.h" />
+    <ClInclude Include="NotSettable.h" />
     <ClInclude Include="Settable.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="general.h" />
+    <None Include="smpch.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

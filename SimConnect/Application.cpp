@@ -1,174 +1,198 @@
-#pragma once
+// Copyright (c) Asobo Studio, All rights reserved. www.asobostudio.com
+//------------------------------------------------------------------------------
+//
+//  SimConnect Data Request Sample
+//  
+//	Description:
+//				After a flight has loaded, request the lat/lon/alt of the user 
+//				aircraft
+//------------------------------------------------------------------------------
 
-#include "smpch.h"
+#include <windows.h>
+#include <tchar.h>
+#include <stdio.h>
+#include <strsafe.h>
+
+#include "SimConnect.h"
+#include <iostream>
 
 
-struct Settable
+
+int     quit = 0;
+HANDLE  hSimConnect = NULL;
+
+struct Struct1
+{
+	double  left_gear;
+	double  brakes;
+	double  heading;
+	double  throttle1;
+};
+
+static enum EVENT_ID {
+	EVENT_SIM_START,
+};
+
+static enum DATA_DEFINITION_ID {
+	DEFINITION_1,
+	THROTTLE1,
+	THROTTLE2,
+};
+
+static enum DATA_REQUEST_ID {
+	REQUEST_1,
+	REQUEST_2,
+};
+
+typedef bool SETTABLE;
+class Data
 {
 private:
-	const char* datumName;		 // Name of the MFS2020 simulation variable. Docs: file:///C:/MSFS%20SDK/Documentation/html/Programming_Tools/SimVars/Simulation_Variables.htm
-	const char* units;			 // Specifies the units of the variable.     Docs: file:///C:/MSFS%20SDK/Documentation/html/Programming_Tools/SimVars/Simulation_Variable_Units.htm
-	DATA_DEFINITION_ID defineID; // Specifies the ID of the client defined data definition.
+	HANDLE  hSimConnect;
+	DATA_DEFINITION_ID  DefineID;	// This will be the identifier for the variable, its needed to do some operations, ex: edit variable, crate event
+	const char* DatumName;			// Name of the MFS2020 simulation variable. Docs: file:///C:/MSFS%20SDK/Documentation/html/Programming_Tools/SimVars/Simulation_Variables.htm
+	const char* UnitsName;			// Specifies the units of the variable.     Docs: file:///C:/MSFS%20SDK/Documentation/html/Programming_Tools/SimVars/Simulation_Variable_Units.htm
+	SIMCONNECT_DATATYPE DatumType;  // Data type of the variable, specification by SDK Docs: ???
+	SETTABLE isSettable;            // A bool that indicated is variable can be modified		
+
 public:
-
-	sim::type dType = sim::type::null;
-
-	Settable(
-		HANDLE hSimConnect,
-		DATA_DEFINITION_ID _defineID,
-		const char* _datumName,
-		const char* _units,
-		sim::type _dType)
-		: datumName(_datumName), defineID(_defineID), units(_units), dType(_dType)
+	Data(
+		HANDLE  _hSimConnect,
+		DATA_DEFINITION_ID  _DefineID,
+		const char* _DatumName,
+		const char* _UnitsName,
+		SETTABLE _isSettable,
+		SIMCONNECT_DATATYPE _DatumType = SIMCONNECT_DATATYPE_FLOAT64
+	) : hSimConnect(_hSimConnect), DefineID(_DefineID), DatumName(_DatumName), UnitsName(_UnitsName), isSettable(_isSettable), DatumType(_DatumType)
 	{
-		SimConnect_AddToDataDefinition(hSimConnect, _defineID, _datumName, units); // Adding simulation variable to the SDK observer
+		SimConnect_AddToDataDefinition(hSimConnect, _DefineID, _DatumName, _UnitsName);
 	}
 
-	int set()
+	template <typename T>
+	T set(T value)
 	{
-		return 0;
-	}
+		if (!isSettable)
+		{
+			std::cout << "\nError! trying to set a no settable variable\n";
+			return -1;
+		}
 
-	int get()
-	{
-		return 0;
+		// TODO: make a switch
+		if (DatumType == SIMCONNECT_DATATYPE_FLOAT64)
+		{
+			double _value = value;
+			SimConnect_SetDataOnSimObject(hSimConnect, DefineID, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(_value), &_value);
+			return 0;
+		}
+		if (DatumType == SIMCONNECT_DATATYPE_INT64)
+		{
+			int _value = value;
+			SimConnect_SetDataOnSimObject(hSimConnect, DefineID, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(_value), &_value);
+			return 0;
+		}
+
+		return -1;
 	}
 };
 
-
-namespace sim
+void CALLBACK MyDispatchProcRD(SIMCONNECT_RECV* pData, DWORD cbData, void* pContext)
 {
-	class Aircraft
-	{
-		/*
-		* Define simulation variables
-		*
-		* #IMPORTANT: Need to initialize the variable in init() to be able to use it
-		*/
-		Settable* throttle1;
-		Settable* throttle2;
-
-		//NotSettable* indicated_altitude;
-
-		int init(HANDLE hSimConnect); // Call this before do anything with the class
-	};
-}
-
-int sim::Aircraft::init(HANDLE hSimConnect) {
-
-	throttle1 = new Settable(hSimConnect, DEFINITION_THROTTLE1, "GENERAL ENG THROTTLE LEVER POSITION:1", "percent", type::DOUBLE);
-	throttle2 = new Settable(hSimConnect, DEFINITION_THROTTLE2, "GENERAL ENG THROTTLE LEVER POSITION:2", "percent", type::DOUBLE);
-	//indicated_altitude = new NotSettable(hSimConnect, ALTITUDE, "PLANE ALTITUDE", "feet", type::DOUBLE);
-	return 0;
-}
-
-
-void myDispatch(SIMCONNECT_RECV* pData, DWORD cbData)
-{
+	HRESULT hr;
 
 	switch (pData->dwID)
 	{
 	case SIMCONNECT_RECV_ID_SIMOBJECT_DATA:
 	{
-		// Retrieve simulation data and cast it to SIMCONNECT_RECV_SIMOBJECT_DATA pointer
-		SIMCONNECT_RECV_SIMOBJECT_DATA* pObjData = (SIMCONNECT_RECV_SIMOBJECT_DATA*)pData;
+		SIMCONNECT_RECV_SIMOBJECT_DATA_BYTYPE* pObjData = (SIMCONNECT_RECV_SIMOBJECT_DATA_BYTYPE*)pData;
+		std::cout 
+			<< "dwDefineCount " << pObjData->dwDefineCount << "       " << 
+			" | dwRequestID " << pObjData->dwRequestID << "         " <<
+			" | dwObjectID " << pObjData->dwObjectID << "         " <<
+			" | dwDefineID " << pObjData->dwDefineID << "         " <<
+			" | dwFlags " << pObjData->dwFlags << "         " <<
+			" | dwData " << pObjData->dwData << "         " <<
 
-		// Switch to find the right request 
+			
+		std::endl;
+
 		switch (pObjData->dwRequestID)
 		{
 		case REQUEST_1:
-			SimResponse* pS = (SimResponse*)&pObjData->dwData;
-			//sim::aircraft.pS = (SimResponse*)&pObjData->dwData;
-
-			// print data
-			/*std::cout
-				<< "\rAltitude: " << sim::aircraft.pS->altitude << std::endl;
-				 << "- Heading: " << pS->heading
-				<< "- Speed (knots): " << pS->speed
-				<< "- Vertical Speed: " << pS->vertical_speed << "  "
-				<< std::flush;*/
+		{
+			DWORD ObjectID = pObjData->dwObjectID;
+			Struct1* pS = (Struct1*)&pObjData->dwData;
+			/*std::cout << "\r thrott:" << pS->throttle1 << "       " <<
+			    " | brakes:" << pS->brakes << "       " <<
+				" | gear:" << pS->left_gear << "       " <<
+				" | heading:" << pS->heading << "       " <<
 
 
-			//sim::aircraft.pS->altitude = pS->altitude;
+			std::flush;*/
 
+			break;
+		}
+
+		default:
 			break;
 		}
 		break;
 	}
+
+
+	case SIMCONNECT_RECV_ID_QUIT:
+	{
+		quit = 1;
+		break;
+	}
+
 	default:
+		//("\nReceived:%d",pData->dwID);
 		break;
 	}
 }
 
-
-namespace sim
+void initSimConnect()
 {
-	Aircraft aircraft;
-}
-
-bool initSimEvents() {
 	HRESULT hr;
 
 
-	if (SUCCEEDED(SimConnect_Open(&hSimConnect, "Client Event", NULL, NULL, NULL, NULL))) {
-		std::cout << "Connected To Microsoft Flight Simulator 2020!" << std::endl;
+	if (SUCCEEDED(SimConnect_Open(&hSimConnect, "Request Data", NULL, 0, 0, 0)))
+	{
+		printf("\nConnected to Flight Simulator!\n");
+		
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "GEAR LEFT POSITION", "percent");
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "BRAKE INDICATOR", "Position", SIMCONNECT_DATATYPE_FLOAT64, 0, 600);
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "PLANE HEADING DEGREES GYRO", "Degrees", SIMCONNECT_DATATYPE_FLOAT64, 0, 77);
+		
+		Data throttle1(hSimConnect, THROTTLE1, "GENERAL ENG THROTTLE LEVER POSITION:1", "percent", true);
+		//hr = SimConnect_AddToDataDefinition(hSimConnect, 0, "GENERAL ENG THROTTLE LEVER POSITION:1", "percent", SIMCONNECT_DATATYPE_FLOAT64);
+		
+		hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_1, DEFINITION_1, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_SECOND, SIMCONNECT_DATA_REQUEST_FLAG_TAGGED);
+		//hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_2, THROTTLE1, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_SIM_FRAME);
 
-		// Initialize sub interfaces
-		//sim::aircraft.init(hSimConnect);
-
-		// REQUESTING OUR DATA
-		// #IMPORTANT: the request order must follow the declaration order o the response struct!
-		// SimConnect_AddToDataDefinition takes: HANDLem enum DEFINITION_ID, const char* DATA_NAME, const char* UNIT, DATATYPE (default is FLOAT64)
-		// Data input
-		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "Indicated Altitude", "feet");
-		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "HEADING INDICATOR", "degrees", SIMCONNECT_DATATYPE_INT32);
-		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "Airspeed Indicated", "knots", SIMCONNECT_DATATYPE_INT32);
-		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "VERTICAL SPEED", "Feet per second", SIMCONNECT_DATATYPE_INT32);
-
-		// System status
-		hr = SimConnect_RequestSystemState(hSimConnect, REQUEST_1, "AircraftLoaded");
-
-		// EVERY SECOND REQUEST DATA FOR DEFINITION 1 ON THE CURRENT USER AIRCRAFT (SIMCONNECT_OBJECT_ID_USER)
-		hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_1, DEFINITION_1, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_SECOND);
-
-		// Process incoming SimConnect Server messages while the app is running
-		while (quit == 0) {
-
-			SIMCONNECT_RECV* pData;
-			DWORD cbData;
-			hr = SimConnect_GetNextDispatch(hSimConnect, &pData, &cbData);
-			if (SUCCEEDED(hr))
-			{
-				myDispatch(pData, cbData);
-			}
-
-			//sim::aircraft.throttle1->set((rand() % 100) + 0.1);
-			//sim::aircraft.throttle2->set((rand() % 50)+0.1);
-				
-			//std::cout << sim::aircraft.pS->altitude << std::endl;
-			//sim->aircraft->throttle1->set(100);
-			//sim->aircraft->throttle2->set(100);
-			//sim.aircraft->throttle1.set(-16000);
-			//sim.aircraft->throttle1.set(-100);
-			//tc.throttlePercent = 100000;
-			//hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_THROTTLE, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(tc), &tc);
+		while (0 == quit)
+		{
+			throttle1.set(777.7);
+			SimConnect_CallDispatch(hSimConnect, MyDispatchProcRD, NULL);
 			Sleep(1);
 		}
 
-		// When we finish running we can close our SimmConnect handle
 		hr = SimConnect_Close(hSimConnect);
-		return true;
-	}
-	else {
-		std::cout << "Failed to Connect!\n";
-		return false;
 	}
 }
 
+int main()
+{
+	initSimConnect();
 
-int main() {
+	//Settable flap(777);
+	//myMax(1, 1);
+	//std::cout << myMax(1, 1);
 
-	initSimEvents();
+	return 0;
 }
+
+
+
 
 

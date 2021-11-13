@@ -1,7 +1,7 @@
 
 #include "smpch.h"
 
-struct Settable
+struct NotSettable
 {
 private:
 	const char* datumName;		 // Name of the MFS2020 simulation variable. Docs: file:///C:/MSFS%20SDK/Documentation/html/Programming_Tools/SimVars/Simulation_Variables.htm
@@ -11,7 +11,7 @@ public:
 
 	sim::type dType = sim::type::null;
 
-	Settable(
+	NotSettable(
 		HANDLE hSimConnect,
 		DATA_DEFINITION_ID _defineID,
 		const char* _datumName,
