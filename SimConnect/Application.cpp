@@ -45,6 +45,8 @@ static enum DATA_REQUEST_ID {
 };
 
 typedef bool SETTABLE;
+
+
 class Data
 {
 private:
