@@ -106,6 +106,8 @@ public:
 
 /*
 	Handler of the data received and events.
+
+	#TODO: Improve this, maybe create a class
 */
 void CALLBACK MyDispatchProcRD(SIMCONNECT_RECV* pData, DWORD cbData, void* pContext)
 {
@@ -124,7 +126,10 @@ void CALLBACK MyDispatchProcRD(SIMCONNECT_RECV* pData, DWORD cbData, void* pCont
 			" | dwFlags " << pObjData->dwFlags << "         " <<
 			" | dwData " << pObjData->dwData << "         " <<
 
-			
+		
+		/*
+			#TODO: Save data using flags. Check SDK Docs.
+		*/
 		std::endl;
 
 		switch (pObjData->dwRequestID)
@@ -158,7 +163,7 @@ void CALLBACK MyDispatchProcRD(SIMCONNECT_RECV* pData, DWORD cbData, void* pCont
 	}
 
 	default:
-		//("\nReceived:%d",pData->dwID);
+		//("\nReceived:%d",pData->dwID); // This is the amount of IDs that SimConnect server has send.
 		break;
 	}
 }
