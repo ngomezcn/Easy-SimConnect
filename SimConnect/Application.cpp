@@ -154,34 +154,37 @@ void CALLBACK MyDispatchProcRD(SIMCONNECT_RECV* pData, DWORD cbData, void* pCont
 		}
 		break;
 	}
-
-
 	case SIMCONNECT_RECV_ID_QUIT:
 	{
 		quit = 1;
 		break;
 	}
-
 	default:
 		//("\nReceived:%d",pData->dwID); // This is the amount of IDs that SimConnect server has send.
 		break;
 	}
 }
 
+static enum DATA_NAMES {
+	GEAR_LEFT_POSITION,
+	BRAKE_INDICATOR,
+	PLANE_HEADING,
+	THROTTLE1,
+};
+
 void initSimConnect()
 {
 	HRESULT hr;
-
 
 	if (SUCCEEDED(SimConnect_Open(&hSimConnect, "Request Data", NULL, 0, 0, 0)))
 	{
 		printf("\nConnected to Flight Simulator!\n");
 		
-		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "GEAR LEFT POSITION", "percent");
-		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "BRAKE INDICATOR", "Position", SIMCONNECT_DATATYPE_FLOAT64, 0, 600);
-		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "PLANE HEADING DEGREES GYRO", "Degrees", SIMCONNECT_DATATYPE_FLOAT64, 0, 77);
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "GEAR LEFT POSITION", "percent", 0, GEAR_LEFT_POSITION);
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "BRAKE INDICATOR", "Position", SIMCONNECT_DATATYPE_FLOAT64, 0, BRAKE_INDICATOR);
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "PLANE HEADING DEGREES GYRO", "Degrees", SIMCONNECT_DATATYPE_FLOAT64, 0, PLANE_HEADING);
 		
-		Data throttle1(hSimConnect, THROTTLE1, "GENERAL ENG THROTTLE LEVER POSITION:1", "percent", true);
+		//Data throttle1(hSimConnect, THROTTLE1, "GENERAL ENG THROTTLE LEVER POSITION:1", "percent", true);
 		//hr = SimConnect_AddToDataDefinition(hSimConnect, 0, "GENERAL ENG THROTTLE LEVER POSITION:1", "percent", SIMCONNECT_DATATYPE_FLOAT64);
 		
 		hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_1, DEFINITION_1, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_SECOND, SIMCONNECT_DATA_REQUEST_FLAG_TAGGED);
