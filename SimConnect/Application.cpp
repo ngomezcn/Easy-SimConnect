@@ -125,50 +125,34 @@ struct StructDatum {
 	StructOneDatum  datum[maxReturnedItems];
 };
 
-void CALLBACK MyDispatchProcRD(SIMCONNECT_RECV* pData, DWORD cbData, void* pContext)
+void CALLBACK MyDispatchProcPDR(SIMCONNECT_RECV* pData, DWORD cbData, void* pContext)
 {
 	HRESULT hr;
 
 	switch (pData->dwID)
 	{
+
 	case SIMCONNECT_RECV_ID_SIMOBJECT_DATA:
 	{
 		SIMCONNECT_RECV_SIMOBJECT_DATA* pObjData = (SIMCONNECT_RECV_SIMOBJECT_DATA*)pData;
-		/*std::cout
-			<< "dwDefineCount " << pObjData->dwDefineCount << "       " <<
-			" | dwRequestID " << pObjData->dwRequestID << "         " <<
-			" | dwObjectID " << pObjData->dwObjectID << "         " <<
-			" | dwDefineID " << pObjData->dwDefineID << "         " <<
-			" | dwFlags " << pObjData->dwFlags << "         " <<
-			" | dwData " << pObjData->dwData << "         " <<
-			std::endl;*/
 
-		
-		/*
-			#TODO: Save data using flags. Check SDK Docs.
-		*/
 		switch (pObjData->dwRequestID)
 		{
-		case REQUEST_1:
+		case DEFINITION_1:
 		{
-			/*DWORD ObjectID = pObjData->dwObjectID;
-			Struct1* pS = (Struct1*)&pObjData->dwData;
-			std::cout << "\r thrott:" << pS->throttle1 << "       " <<
-			//   " | brakes:" << pS->brakes << "       " <<
-			//	" | gear:" << pS->left_gear << "       " <<
-			//	" | heading:" << pS->heading << "       " <<
-
-
-			std::flush;*/
-
-			int	count = 0;
+			int	count = 0;;
 			StructDatum* pS = (StructDatum*)&pObjData->dwData;
+
+			// There can be a minimum of 1 and a maximum of maxReturnedItems
+			// in the StructDatum structure. The actual number returned will
+			// be held in the dwDefineCount parameter.
+
 			while (count < (int)pObjData->dwDefineCount)
 			{
 				switch (pS->datum[count].id)
 				{
 				case THROTTLE1:
-					printf("\nVertical speed = %f", pS->datum[count].value);
+					printf("\nTHROTTLE1 = %f", pS->datum[count].value);
 					break;
 
 				default:
@@ -177,7 +161,6 @@ void CALLBACK MyDispatchProcRD(SIMCONNECT_RECV* pData, DWORD cbData, void* pCont
 				}
 				++count;
 			}
-
 			break;
 		}
 
@@ -186,13 +169,15 @@ void CALLBACK MyDispatchProcRD(SIMCONNECT_RECV* pData, DWORD cbData, void* pCont
 		}
 		break;
 	}
+
+
 	case SIMCONNECT_RECV_ID_QUIT:
 	{
 		quit = 1;
 		break;
 	}
+
 	default:
-		//("\nReceived:%d",pData->dwID); // This is the amount of IDs that SimConnect server has send.
 		break;
 	}
 }
@@ -208,7 +193,7 @@ void initSimConnect()
 		//hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "GEAR LEFT POSITION", "percent");
 		//hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "BRAKE INDICATOR", "Position");
 		//hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "PLANE HEADING DEGREES GYRO", "Degrees");
-		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "GENERAL ENG THROTTLE LEVER POSITION:1", "Bool", SIMCONNECT_DATATYPE_FLOAT64, 0 , THROTTLE1);
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "GENERAL ENG THROTTLE LEVER POSITION:1", "Bool", SIMCONNECT_DATATYPE_FLOAT32, 0 , THROTTLE1);
 
 		//Data throttle1(hSimConnect, THROTTLE1, "GENERAL ENG THROTTLE LEVER POSITION:1", "percent", true);
 		//hr = SimConnect_AddToDataDefinition(hSimConnect, 0, "GENERAL ENG THROTTLE LEVER POSITION:1", "percent", SIMCONNECT_DATATYPE_FLOAT64);
@@ -220,8 +205,8 @@ void initSimConnect()
 
 		while (0 == quit)
 		{
-			//throttle1.set(777.7);
-			SimConnect_CallDispatch(hSimConnect, MyDispatchProcRD, NULL);
+			throttle1.set(777.7);
+			SimConnect_CallDispatch(hSimConnect, MyDispatchProcPDR, NULL);
 			Sleep(1);
 		}
 
