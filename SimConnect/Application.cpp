@@ -101,23 +101,17 @@ public:
 };
 
 
-/*
-	Handler of the data received and events.
 
-	#TODO: Improve this, maybe create a class
-*/
-struct StructOneDatum {
+struct SimConnectResponse {
 	int		id;
 	float	value;
 };
 
-// maxReturnedItems is 2 in this case, as the sample only requests
-// vertical speed and pitot heat switch data
 #define maxReturnedItems	1
 
 // A structure that can be used to receive Tagged data
-struct StructDatum {
-	StructOneDatum  datum[maxReturnedItems];
+struct SimConnectSerializer {
+	SimConnectResponse  response[maxReturnedItems];
 };
 
 void CALLBACK MyDispatchProcPDR(SIMCONNECT_RECV* pData, DWORD cbData, void* pContext)
@@ -155,17 +149,17 @@ void CALLBACK MyDispatchProcPDR(SIMCONNECT_RECV* pData, DWORD cbData, void* pCon
 		case DEFINITION_1:
 		{
 			int	count = 0;;
-			StructDatum* pS = (StructDatum*)&pObjData->dwData;
+			SimConnectSerializer* pS = (SimConnectSerializer*)&pObjData->dwData;
 			while (count < (int)pObjData->dwDefineCount)
 			{
 
-				switch (pS->datum[count].id)
+				switch (pS->response[count].id)
 				{
 				case 1000:
-					printf("\nTHROTTLE1 = %f", pS->datum[count].value);
+					printf("\nTHROTTLE1 = %f", pS->response[count].value);
 					break;
 				case 1001:
-					printf("\nTHROTTLE2 = %f", pS->datum[count].value);
+					printf("\nTHROTTLE2 = %f", pS->response[count].value);
 					break;
 				default:
 					break;
