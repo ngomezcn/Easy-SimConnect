@@ -1,13 +1,3 @@
-// Copyright (c) Asobo Studio, All rights reserved. www.asobostudio.com
-//------------------------------------------------------------------------------
-//
-//  SimConnect Data Request Sample
-//  
-//	Description:
-//				After a flight has loaded, request the lat/lon/alt of the user 
-//				aircraft
-//------------------------------------------------------------------------------
-
 #include <windows.h>
 #include <tchar.h>
 #include <stdio.h>
@@ -69,8 +59,7 @@ public:
 		static int _id = BASE_DATA_ID;
 		ID = _id++;
 		SimConnect_AddToDataDefinition(hSimConnect, _DefineID, _DatumName, _UnitsName, DatumType, 0, ID);
-		std::cout << "DATANAME1: " << DATANAME2 << std::endl;
-		std::cout << "new sim object: " << _DatumName << " - id: " << ID << std::endl;
+		std::cout << "new sim object: '" << _DatumName << "' ID->" << ID << std::endl;
 	}
 
 	template <typename T>
@@ -107,12 +96,13 @@ struct SimConnectResponse {
 	float	value;
 };
 
-#define maxReturnedItems	1
+#define maxReturnedItems	0
 
 // A structure that can be used to receive Tagged data
 struct SimConnectSerializer {
-	SimConnectResponse  response[maxReturnedItems];
+	SimConnectResponse  response[1];
 };
+
 
 void CALLBACK MyDispatchProcPDR(SIMCONNECT_RECV* pData, DWORD cbData, void* pContext)
 {
@@ -150,6 +140,8 @@ void CALLBACK MyDispatchProcPDR(SIMCONNECT_RECV* pData, DWORD cbData, void* pCon
 		{
 			int	count = 0;;
 			SimConnectSerializer* pS = (SimConnectSerializer*)&pObjData->dwData;
+			std::cout << (int)pObjData->dwDefineCount << std::endl;
+
 			while (count < (int)pObjData->dwDefineCount)
 			{
 
@@ -159,6 +151,9 @@ void CALLBACK MyDispatchProcPDR(SIMCONNECT_RECV* pData, DWORD cbData, void* pCon
 					printf("\nTHROTTLE1 = %f", pS->response[count].value);
 					break;
 				case 1001:
+					printf("\nTHROTTLE2 = %f", pS->response[count].value);
+					break;
+				case 1002:
 					printf("\nTHROTTLE2 = %f", pS->response[count].value);
 					break;
 				default:
@@ -214,7 +209,7 @@ void initSimConnect()
 
 		while (0 == quit)
 		{
-			//throttle1.set(777.7);
+			//throttle1.set(7.7);
 			SimConnect_CallDispatch(hSimConnect, MyDispatchProcPDR, NULL);
 			Sleep(1);
 		}
