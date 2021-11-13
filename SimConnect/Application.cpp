@@ -23,9 +23,9 @@ HANDLE  hSimConnect = NULL;
 
 struct Struct1
 {
-	double  left_gear;
-	double  brakes;
-	double  heading;
+	//double  left_gear;
+	//double  brakes;
+	//double  heading;
 	double  throttle1;
 };
 
@@ -118,33 +118,32 @@ void CALLBACK MyDispatchProcRD(SIMCONNECT_RECV* pData, DWORD cbData, void* pCont
 	case SIMCONNECT_RECV_ID_SIMOBJECT_DATA:
 	{
 		SIMCONNECT_RECV_SIMOBJECT_DATA_BYTYPE* pObjData = (SIMCONNECT_RECV_SIMOBJECT_DATA_BYTYPE*)pData;
-		std::cout 
-			<< "dwDefineCount " << pObjData->dwDefineCount << "       " << 
+		/*std::cout
+			<< "dwDefineCount " << pObjData->dwDefineCount << "       " <<
 			" | dwRequestID " << pObjData->dwRequestID << "         " <<
 			" | dwObjectID " << pObjData->dwObjectID << "         " <<
 			" | dwDefineID " << pObjData->dwDefineID << "         " <<
 			" | dwFlags " << pObjData->dwFlags << "         " <<
 			" | dwData " << pObjData->dwData << "         " <<
+			std::endl;*/
 
 		
 		/*
 			#TODO: Save data using flags. Check SDK Docs.
 		*/
-		std::endl;
-
 		switch (pObjData->dwRequestID)
 		{
 		case REQUEST_1:
 		{
 			DWORD ObjectID = pObjData->dwObjectID;
 			Struct1* pS = (Struct1*)&pObjData->dwData;
-			/*std::cout << "\r thrott:" << pS->throttle1 << "       " <<
-			    " | brakes:" << pS->brakes << "       " <<
-				" | gear:" << pS->left_gear << "       " <<
-				" | heading:" << pS->heading << "       " <<
+			std::cout << "\r thrott:" << pS->throttle1 << "       " <<
+			//   " | brakes:" << pS->brakes << "       " <<
+			//	" | gear:" << pS->left_gear << "       " <<
+			//	" | heading:" << pS->heading << "       " <<
 
 
-			std::flush;*/
+			std::flush;
 
 			break;
 		}
@@ -165,13 +164,6 @@ void CALLBACK MyDispatchProcRD(SIMCONNECT_RECV* pData, DWORD cbData, void* pCont
 	}
 }
 
-static enum DATA_NAMES {
-	GEAR_LEFT_POSITION,
-	BRAKE_INDICATOR,
-	PLANE_HEADING,
-	THROTTLE1,
-};
-
 void initSimConnect()
 {
 	HRESULT hr;
@@ -180,19 +172,22 @@ void initSimConnect()
 	{
 		printf("\nConnected to Flight Simulator!\n");
 		
-		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "GEAR LEFT POSITION", "percent", 0, GEAR_LEFT_POSITION);
-		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "BRAKE INDICATOR", "Position", SIMCONNECT_DATATYPE_FLOAT64, 0, BRAKE_INDICATOR);
-		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "PLANE HEADING DEGREES GYRO", "Degrees", SIMCONNECT_DATATYPE_FLOAT64, 0, PLANE_HEADING);
-		
+		//hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "GEAR LEFT POSITION", "percent");
+		//hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "BRAKE INDICATOR", "Position");
+		//hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "PLANE HEADING DEGREES GYRO", "Degrees");
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "GENERAL ENG THROTTLE LEVER POSITION:1", "percent", SIMCONNECT_DATATYPE_FLOAT32, 0 , THROTTLE1);
+
 		//Data throttle1(hSimConnect, THROTTLE1, "GENERAL ENG THROTTLE LEVER POSITION:1", "percent", true);
 		//hr = SimConnect_AddToDataDefinition(hSimConnect, 0, "GENERAL ENG THROTTLE LEVER POSITION:1", "percent", SIMCONNECT_DATATYPE_FLOAT64);
 		
-		hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_1, DEFINITION_1, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_SECOND, SIMCONNECT_DATA_REQUEST_FLAG_TAGGED);
+		//hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_1, DEFINITION_1, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_SIM_FRAME);
+		hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_1, DEFINITION_1, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_SIM_FRAME, SIMCONNECT_DATA_REQUEST_FLAG_CHANGED | SIMCONNECT_DATA_REQUEST_FLAG_TAGGED);
+
 		//hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_2, THROTTLE1, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_SIM_FRAME);
 
 		while (0 == quit)
 		{
-			throttle1.set(777.7);
+			//throttle1.set(777.7);
 			SimConnect_CallDispatch(hSimConnect, MyDispatchProcRD, NULL);
 			Sleep(1);
 		}
