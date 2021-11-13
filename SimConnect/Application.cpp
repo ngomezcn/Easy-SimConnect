@@ -44,9 +44,15 @@ static enum DATA_REQUEST_ID {
 	REQUEST_2,
 };
 
+/*
+	Custom Easy SimConnect types
+*/
 typedef bool SETTABLE;
 
 
+/*
+	Main manager of the simvars
+*/
 class Data
 {
 private:
@@ -97,6 +103,10 @@ public:
 	}
 };
 
+
+/*
+	Handler of the data received and events.
+*/
 void CALLBACK MyDispatchProcRD(SIMCONNECT_RECV* pData, DWORD cbData, void* pContext)
 {
 	HRESULT hr;
