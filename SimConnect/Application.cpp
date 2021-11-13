@@ -55,6 +55,9 @@ typedef bool SETTABLE;
 */
 class Data
 {
+public:
+	int Id; // Unique global identifier for SimVar
+
 private:
 	HANDLE  hSimConnect;
 	DATA_DEFINITION_ID  DefineID;	// This will be the identifier for the variable, its needed to do some operations, ex: edit variable, crate event
@@ -62,6 +65,7 @@ private:
 	const char* UnitsName;			// Specifies the units of the variable.     Docs: file:///C:/MSFS%20SDK/Documentation/html/Programming_Tools/SimVars/Simulation_Variable_Units.htm
 	SIMCONNECT_DATATYPE DatumType;  // Data type of the variable, specification by SDK Docs: ???
 	SETTABLE isSettable;            // A bool that indicated is variable can be modified		
+	
 
 public:
 	Data(
@@ -109,8 +113,6 @@ public:
 
 	#TODO: Improve this, maybe create a class
 */
-
-
 struct StructOneDatum {
 	int		id;
 	float	value;
@@ -124,6 +126,8 @@ struct StructOneDatum {
 struct StructDatum {
 	StructOneDatum  datum[maxReturnedItems];
 };
+
+
 
 void CALLBACK MyDispatchProcPDR(SIMCONNECT_RECV* pData, DWORD cbData, void* pContext)
 {
@@ -169,8 +173,6 @@ void CALLBACK MyDispatchProcPDR(SIMCONNECT_RECV* pData, DWORD cbData, void* pCon
 		}
 		break;
 	}
-
-
 	case SIMCONNECT_RECV_ID_QUIT:
 	{
 		quit = 1;
@@ -205,18 +207,42 @@ void initSimConnect()
 
 		while (0 == quit)
 		{
-			throttle1.set(777.7);
+			//throttle1.set(777.7);
 			SimConnect_CallDispatch(hSimConnect, MyDispatchProcPDR, NULL);
 			Sleep(1);
 		}
-
 		hr = SimConnect_Close(hSimConnect);
 	}
 }
 
+class identif
+{
+
+};
+
+class person
+{
+public:
+	int _id;
+
+	person(int a)
+	{
+		static int id = 600; _id = id++;
+
+		std::cout << _id << std::endl;
+	}
+
+};
+
 int main()
 {
-	initSimConnect();
+	//initSimConnect();
+
+	person a(1);
+	person b(1);
+	person ca(1);
+	person aa(1);
+	person agg(1);
 
 	//Settable flap(777);
 	//myMax(1, 1);
