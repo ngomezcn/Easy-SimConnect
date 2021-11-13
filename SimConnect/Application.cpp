@@ -109,6 +109,22 @@ public:
 
 	#TODO: Improve this, maybe create a class
 */
+
+
+struct StructOneDatum {
+	int		id;
+	float	value;
+};
+
+// maxReturnedItems is 2 in this case, as the sample only requests
+// vertical speed and pitot heat switch data
+#define maxReturnedItems	1
+
+// A structure that can be used to receive Tagged data
+struct StructDatum {
+	StructOneDatum  datum[maxReturnedItems];
+};
+
 void CALLBACK MyDispatchProcRD(SIMCONNECT_RECV* pData, DWORD cbData, void* pContext)
 {
 	HRESULT hr;
@@ -117,7 +133,7 @@ void CALLBACK MyDispatchProcRD(SIMCONNECT_RECV* pData, DWORD cbData, void* pCont
 	{
 	case SIMCONNECT_RECV_ID_SIMOBJECT_DATA:
 	{
-		SIMCONNECT_RECV_SIMOBJECT_DATA_BYTYPE* pObjData = (SIMCONNECT_RECV_SIMOBJECT_DATA_BYTYPE*)pData;
+		SIMCONNECT_RECV_SIMOBJECT_DATA* pObjData = (SIMCONNECT_RECV_SIMOBJECT_DATA*)pData;
 		/*std::cout
 			<< "dwDefineCount " << pObjData->dwDefineCount << "       " <<
 			" | dwRequestID " << pObjData->dwRequestID << "         " <<
@@ -135,7 +151,7 @@ void CALLBACK MyDispatchProcRD(SIMCONNECT_RECV* pData, DWORD cbData, void* pCont
 		{
 		case REQUEST_1:
 		{
-			DWORD ObjectID = pObjData->dwObjectID;
+			/*DWORD ObjectID = pObjData->dwObjectID;
 			Struct1* pS = (Struct1*)&pObjData->dwData;
 			std::cout << "\r thrott:" << pS->throttle1 << "       " <<
 			//   " | brakes:" << pS->brakes << "       " <<
@@ -143,7 +159,24 @@ void CALLBACK MyDispatchProcRD(SIMCONNECT_RECV* pData, DWORD cbData, void* pCont
 			//	" | heading:" << pS->heading << "       " <<
 
 
-			std::flush;
+			std::flush;*/
+
+			int	count = 0;
+			StructDatum* pS = (StructDatum*)&pObjData->dwData;
+			while (count < (int)pObjData->dwDefineCount)
+			{
+				switch (pS->datum[count].id)
+				{
+				case THROTTLE1:
+					printf("\nVertical speed = %f", pS->datum[count].value);
+					break;
+
+				default:
+					//printf("\nUnknown datum ID: %d", pS->datum[count].id);
+					break;
+				}
+				++count;
+			}
 
 			break;
 		}
@@ -175,7 +208,7 @@ void initSimConnect()
 		//hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "GEAR LEFT POSITION", "percent");
 		//hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "BRAKE INDICATOR", "Position");
 		//hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "PLANE HEADING DEGREES GYRO", "Degrees");
-		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "GENERAL ENG THROTTLE LEVER POSITION:1", "percent", SIMCONNECT_DATATYPE_FLOAT32, 0 , THROTTLE1);
+		hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_1, "GENERAL ENG THROTTLE LEVER POSITION:1", "Bool", SIMCONNECT_DATATYPE_FLOAT64, 0 , THROTTLE1);
 
 		//Data throttle1(hSimConnect, THROTTLE1, "GENERAL ENG THROTTLE LEVER POSITION:1", "percent", true);
 		//hr = SimConnect_AddToDataDefinition(hSimConnect, 0, "GENERAL ENG THROTTLE LEVER POSITION:1", "percent", SIMCONNECT_DATATYPE_FLOAT64);
