@@ -206,6 +206,7 @@ void initSimConnect()
 
 		Data throttle1(hSimConnect, DEFINITION_1, "GENERAL ENG THROTTLE LEVER POSITION:1", "percent", SIMCONNECT_DATATYPE_FLOAT32, true);
 		Data throttle2(hSimConnect, DEFINITION_1, "GENERAL ENG THROTTLE LEVER POSITION:2", "percent", SIMCONNECT_DATATYPE_FLOAT32, true);
+		Data gear_left(hSimConnect, DEFINITION_1, "GEAR LEFT POSITION", "percent", SIMCONNECT_DATATYPE_FLOAT32, true);
 
 		
 
